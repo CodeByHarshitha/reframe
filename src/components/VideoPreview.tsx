@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
   file: File | null;
@@ -11,6 +11,7 @@ export default function VideoPreview({ file }: Props) {
 
   const lastId = useRef(0);
   const urlRef = useRef<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // stable handler reference (avoids re-attaching logic unnecessarily)
   const onLoadedRef = useRef<(() => void) | null>(null);
@@ -18,6 +19,7 @@ export default function VideoPreview({ file }: Props) {
   useEffect(() => {
     if (!file) return;
 
+    setIsLoading(true);
     const id = ++lastId.current;
     const url = URL.createObjectURL(file);
 
@@ -68,11 +70,21 @@ export default function VideoPreview({ file }: Props) {
   if (!file) return null;
 
   return (
-    <div className="w-full rounded-lg overflow-hidden bg-[#0a0a0a] aspect-video">
+    <div className="relative w-full rounded-lg overflow-hidden bg-[#0a0a0a] aspect-video">
+      {isLoading && (
+        <div
+          className="absolute inset-0 animate-pulse bg-gray-700 rounded-xl transition-opacity duration-300"
+          aria-label="Loading video preview"
+        />
+      )}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video
         ref={videoRef}
         controls
-        className="w-full h-full object-contain"
+        className={`w-full h-full object-contain transition-opacity duration-300 ${
+          isLoading ? "opacity-0" : "opacity-100"
+        }`}
+        onLoadedData={() => setIsLoading(false)}
         playsInline
       />
     </div>
